@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { Roles } from "../enums/auth.enum";
 
 export interface IAuthUser {
     id : string;
@@ -8,6 +9,7 @@ export interface IAuthUser {
     password : string;
     mobile : string;
     country : string;
+    role? : Roles;
     profilePicture? : string;
     isEmailVerified : boolean;
     isMobileOtpVerified : boolean;

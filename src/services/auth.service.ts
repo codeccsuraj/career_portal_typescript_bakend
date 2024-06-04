@@ -89,27 +89,31 @@ class AuthService {
         }
     }
 
-    async resetPassword(otp : string, password : string):Promise<void> {
+    async resetPassword(otp: string, password: string): Promise<string> {
         try {
-            const user = await AuthUser.findOne({where : {otp}});
-            if(!user) {
+            const user = await AuthUser.findOne({ where: { otp } });
+            if (!user) {
                 throw new Error('Invalid OTP');
             }
-
+    
             const now = new Date();
-            if(user.otpExpiration && user.otpExpiration < now) {
+            if (user.otpExpiration && user.otpExpiration < now) {
                 throw new Error('OTP has expired');
             }
-
+    
             user.password = password;
             await user.save();
-
+    
             user.otp = "";
             await user.save();
+    
+            return "Password reset successfully";
         } catch (error) {
             console.error('Error in reset password:', error);
+            throw error; // Rethrow the error for proper handling
         }
     }
+    
 }
 
 export const authServices = new AuthService();
