@@ -8,16 +8,22 @@ class ProductController {
         try {
             const data = req.body;
             const { error } = productSchemaValidate.validate(data);
+
             if (error) {
-                res.status(400).json({ message: "error" });
+                res.status(400).json({ message: error.details[0].message });
                 return;
             }
 
             const response = await productServices.createJobApplication(data);
-            res.status(200).json({ data: response });
+            res.status(201).json({ data: response });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "Internal server error" });
+
+            if (error instanceof Error) {
+                res.status(500).json({ message: error.message });
+            } else {
+                res.status(500).json({ message: "Internal server error" });
+            }
         }
     }
 }

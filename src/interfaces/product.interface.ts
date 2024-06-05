@@ -4,7 +4,6 @@ export interface IProduct {
     _id?: Types.ObjectId | string;
     id?: string;
     adminId?: string;
-    userId: string;
     email? : string;
     title: string;
     basicTitle: string;
@@ -22,11 +21,11 @@ export interface IProduct {
     salaryRange : string;
     experience : string;
     qualification : string;
-    maxValue : number;
-    minValue : number;
+    openings : number;
     companyName? : string;
     companyWebsite? : string;
     jobUrl? : string;
+    jobLocation? : string;
     isReferenceJob? : boolean
     createdAt: Date;
     updatedAt?: Date

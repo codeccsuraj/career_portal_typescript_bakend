@@ -1,13 +1,15 @@
-import { DataTypes, Model, UUIDV4 } from "sequelize";
-import { IAuthUser } from "../interfaces/auth.interface";
+import { DataTypes, Model, UUIDV4 } from 'sequelize';
 import bcrypt from 'bcrypt';
-import { sequelize } from "../connections/mysql.connection";
+import { sequelize } from '../connections/mysql.connection';
+import { IAuthUser } from '../interfaces/auth.interface';
+import { Roles } from '../enums/auth.enum';
 
 class AuthUser extends Model<IAuthUser> {
     public id!: string;
     public firstName!: string;
     public lastName!: string;
     public email!: string;
+    public username!: string;
     public password!: string;
     public mobile!: string;
     public country!: string;
@@ -17,8 +19,9 @@ class AuthUser extends Model<IAuthUser> {
     public browserType!: string;
     public otp!: string;
     public otpExpiration!: Date;
-    public emailResentOtp!: boolean;
+    public emailResendOtp!: boolean;
     public mobileResendOtp!: boolean;
+    public role!: Roles;
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
@@ -54,6 +57,11 @@ AuthUser.init({
             isEmail: true,
         }
     },
+    username: { 
+        type: DataTypes.STRING, 
+        allowNull: false,
+        unique: true,
+    },
     password: { 
         type: DataTypes.STRING, 
         allowNull: false,
@@ -82,7 +90,7 @@ AuthUser.init({
     },
     browserType: { 
         type: DataTypes.STRING, 
-        allowNull: false,
+        allowNull: true,
     },
     otp: { 
         type: DataTypes.STRING, 
@@ -101,6 +109,11 @@ AuthUser.init({
         type: DataTypes.BOOLEAN, 
         allowNull: false, 
         defaultValue: false,
+    },
+    role: {
+        type: DataTypes.ENUM(...Object.values(Roles)),
+        allowNull: false,
+        defaultValue: Roles.USER,
     },
 }, {
     sequelize,

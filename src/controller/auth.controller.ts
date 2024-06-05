@@ -23,6 +23,22 @@ class AuthController {
         }
     }
 
+    async verifyUserEmail (req : Request, res : Response):Promise<void> {
+        try {
+            const {otp} = req.body;
+            const response = await authServices.verifyUserEmail(otp)
+             // Send appropriate HTTP status code based on the response
+             if (response.token) {
+                res.status(200).json(response); // Success
+            } else {
+                res.status(400).json(response); // Error
+            }
+        } catch (error) {
+            console.error('Error in verifying email:', error);
+            res.status(500).json({ message: 'Internal server error', loading: false, token: '', user: null });
+        }
+    }
+
     async authenticateUser(req : Request, res : Response): Promise<void> {
         try {
             const {email, password} = req.body as ILoginUser;

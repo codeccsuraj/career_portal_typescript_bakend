@@ -5,32 +5,84 @@ import jwt from 'jsonwebtoken';
 import { generate } from "otp-generator";
 import EmailVerificationProvider from "../config/email.config";
 
-type AddUserResult = IAuthUser | string;
 
 class AuthService {
-    async addUser(userDetails: IAuthUser): Promise<AddUserResult | null> {
+    async addUser(userDetails: IAuthUser): Promise<ILoginResponse | null> {
         try {
+            // Check if user with the provided email already exists
             const existingUserWithEmail = await AuthUser.findOne({
                 where: { email: userDetails.email },
             });
-
+    
             if (existingUserWithEmail) {
-                return 'Email already exists';
+                return { message: 'Email already exists', loading: false, token: '', user: null };
             }
-
+    
+            // Check if user with the provided mobile number already exists
             const existingMobileUser = await AuthUser.findOne({ where: { mobile: userDetails.mobile } });
             if (existingMobileUser) {
-                return 'Mobile number already exists';
+                return { message: 'Mobile number already exists', loading: false, token: '', user: null };
             }
+    
+            // Generate OTP
+            const resetOtp = generate(6, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
 
-            const response = await AuthUser.create(userDetails);
-            return response.toJSON() as IAuthUser;
+    
+            // Set OTP expiration time (e.g., 10 minutes from now)
+            const otpExpiration = new Date();
+            otpExpiration.setMinutes(otpExpiration.getMinutes() + 10);
+    
+            // Save user details along with OTP and expiration time
+            const newUser = await AuthUser.create({
+                ...userDetails,
+                otp: resetOtp,
+                otpExpiration: otpExpiration,
+            });
+    
+            // Send OTP via email
+            await EmailVerificationProvider(userDetails.email, resetOtp);
+    
+            // Return a response indicating successful user creation
+            return {
+                message: 'User added successfully',
+                loading: false,
+                token: '', // Assuming you handle token generation elsewhere
+                user: newUser.toJSON() as IAuthUser, // Convert the user to JSON format
+            };
         } catch (error) {
             console.error("Error adding user:", error);
             return null;
         }
     }
-
+    async verifyUserEmail(otpToken: string): Promise<ILoginResponse> {
+        try {
+            // Find the user by OTP
+            const user = await AuthUser.findOne({ where: { otp: otpToken } });
+    
+            if (!user) {
+                return { message: 'User not found', loading: false, token: '', user: null };
+            }
+    
+            // Check if OTP is expired
+            const now = new Date();
+            if (user.otpExpiration && user.otpExpiration < now) {
+                return { message: 'OTP has expired', loading: false, token: '', user: null };
+            }
+    
+            // Mark email as verified
+            user.otp = "";
+            user.isEmailVerified = true;
+            await user.save();
+    
+            // Generate JWT token
+            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+            return { message: 'Email verified successfully', loading: false, token, user: user };
+        } catch (error) {
+            console.error('Error in verifying email:', error);
+            return { message: 'Internal server error', loading: false, token: '', user: null };
+        }
+    }
+    
     async authenticateUser(loginCredentials: ILoginUser): Promise<ILoginResponse> {
         try {
             const { email, password } = loginCredentials;

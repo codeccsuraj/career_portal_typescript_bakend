@@ -3,7 +3,7 @@ import { IAdminModel } from "../interfaces/admin.interface";
 
 const IST_OFFSET_IN_MILLIS = 330 * 60 * 1000;
 const adminSchema: Schema<IAdminModel> = new mongoose.Schema({
-    sellerId: { type: String, required: true },
+    adminId: { type: String, required: true },
     email: { type: String, required: true, lowercase: true, trim: true },
     companyName: { type: String, required: true },
     companyAddress: { type: String, required: true },

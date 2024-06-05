@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 
 export interface IAdminModel {
         _id?: Types.ObjectId | string;
-        sellerId : string;
+        adminId : string;
         email: string;
         companyName : string;
         companyAddress : string;

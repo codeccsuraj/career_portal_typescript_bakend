@@ -8,6 +8,7 @@ import { SqlConnection } from './connections/mysql.connection';
 import { authRoutes } from './routes/auth.routes';
 import { adminRoutes } from './routes/admin.routes';
 import { productRoutes } from './routes/product.routes';
+import { userRoutes } from './routes/user.routes';
 // Initialize the server
 
 type ErrorHandler = (err : Error, req : Request, res : Response, next : NextFunction) => void;
@@ -26,7 +27,8 @@ const initializeServer = async():Promise<void> => {
     ));
     app.use('/api/v1/auth',authRoutes)
     app.use('/api/v1/admin', adminRoutes)
-    app.use('/api/v1/job', productRoutes)
+    app.use('/api/v1/job', productRoutes);
+    app.use('/api/v1/user', userRoutes)
 
     try {
         await Connection()

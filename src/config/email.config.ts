@@ -7,12 +7,12 @@ dotenv.config();
 const EmailVerificationProvider = async (email: string, otp: string): Promise<void> => {
     const transporter = nodemailer.createTransport({
         service: "gmail",
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // or 'STARTTLS'
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: false, 
         auth: {
-            user: 'raajrawat221@gmail.com',
-            pass: 'jvpc jltk lqhs tdjt'
+            user: process.env.SMTP_USERNAME,
+            pass: process.env.SMTP_SENDER
         }
     } as SMTPTransport.Options);
     console.log("working check", email, otp)
