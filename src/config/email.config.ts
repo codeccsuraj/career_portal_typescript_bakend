@@ -15,13 +15,12 @@ const EmailVerificationProvider = async (email: string, otp: string): Promise<vo
             pass: process.env.SMTP_SENDER
         }
     } as SMTPTransport.Options);
-    console.log("working check", email, otp)
     let mailOptions = {
-        from: '"Your Company" <no-reply@example.com>',
+        from: '"Career Techguru" <no-reply@careertechguru.co>',
         to: email,
-        subject: 'Your OTP Code',
+        subject: 'Your OTP Verification Code',
         text: `Your OTP code is ${otp}`,
-        html: `<p>Your OTP code is <b>${otp}</b></p>`
+        html: `<p>Please use the following One Time Password (OTP) to verify your identity. Don't share this OTP with anyone <b>${otp}</b></p>`
     };
 
     try {

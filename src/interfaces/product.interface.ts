@@ -46,3 +46,16 @@ export interface IRatingCategories {
     two: IRatingCategoryItem;
     one: IRatingCategoryItem;
 }
+export interface IQueryParams {
+    id?: string;
+    category?: string;
+    subcategory?: string;
+    jobType : string;
+    inStock?: boolean;
+    workType : string;
+    salaryRange : string;
+    experience : string;
+    qualification : string;
+    jobLocation? : string;
+    [key: string]: any;
+}

@@ -71,13 +71,55 @@ class AuthController {
             return res.status(500).json({ message: 'Internal server error' });
         }
     }
-
-    async resetPassword (req: Request, res : Response):Promise<any> {
+    
+    async verifyOtpForPasswordReset(req: Request, res: Response): Promise<Response> {
         try {
-            const {otp, password} = req.body;
-            const response  = await authServices.resetPassword(otp, password);
-            return res.status(200).json({ message: response });
+            const { otp } = req.body;
+
+            if (!otp) {
+                return res.status(400).json({ message: 'OTP is required' });
+            }
+
+            const result = await authServices.verifyOtpForPasswordReset(otp);
+
+            if (result === 'Invalid OTP') {
+                return res.status(400).json({ message: 'Invalid OTP' });
+            } else if (result === 'OTP has expired') {
+                return res.status(400).json({ message: 'OTP has expired' });
+            } else if (result === 'OTP verified successfully') {
+                return res.status(200).json({ message: 'OTP verified successfully' });
+            } else {
+                return res.status(500).json({ message: 'Internal server error' });
+            }
         } catch (error) {
+            console.error('Error in verifying OTP:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+
+    async resetPassword(req: Request, res: Response): Promise<any> {
+        try {
+            const { email, password } = req.body;
+            
+            if (!email || !password) {
+                return res.status(400).json({ message: 'Email and password are required' });
+            }
+
+            const response = await authServices.resetPassword(email, password);
+
+            if (response === 'User not found') {
+                return res.status(404).json({ message: 'User not found' });
+            } else if (response === 'Invalid OTP') {
+                return res.status(400).json({ message: 'Invalid OTP' });
+            } else if (response === 'OTP has expired') {
+                return res.status(400).json({ message: 'OTP has expired' });
+            } else if (response === 'Password reset successfully') {
+                return res.status(200).json({ message: response });
+            } else {
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        } catch (error) {
+            console.error('Error in resetting password:', error);
             return res.status(500).json({ message: 'Internal server error' });
         }
     }

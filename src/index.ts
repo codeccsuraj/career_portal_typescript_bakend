@@ -25,10 +25,10 @@ const initializeServer = async():Promise<void> => {
             extended : true
         }
     ));
-    app.use('/api/v1/auth',authRoutes)
-    app.use('/api/v1/admin', adminRoutes)
+    app.use('/api/v1/auth',authRoutes);
+    app.use('/api/v1/admin', adminRoutes);
     app.use('/api/v1/job', productRoutes);
-    app.use('/api/v1/user', userRoutes)
+    app.use('/api/v1/user', userRoutes);
 
     try {
         await Connection()

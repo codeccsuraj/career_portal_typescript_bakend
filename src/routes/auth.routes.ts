@@ -7,4 +7,5 @@ authRoutes.post('/create-user', authController.addUser);
 authRoutes.post('/login-user', authController.authenticateUser);
 authRoutes.post('/forgot-password', authController.forgotPassword);
 authRoutes.post('/reset-password', authController.resetPassword);
+authRoutes.post('/verify-reset-password-otp', authController.verifyOtpForPasswordReset);
 authRoutes.post('/verify-email', authController.verifyUserEmail);

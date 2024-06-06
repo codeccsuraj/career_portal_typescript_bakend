@@ -7,9 +7,17 @@ import EmailVerificationProvider from "../config/email.config";
 
 
 class AuthService {
+    private generateOtp() {
+        return generate(6,{ digits : true, lowerCaseAlphabets : false, upperCaseAlphabets : false, specialChars : false})
+    }
+
+    private setOtpExpiration (minutes : number) {
+        const expiration = new Date();
+        expiration.setMinutes(expiration.getMinutes() + minutes);
+        return expiration;
+    }
     async addUser(userDetails: IAuthUser): Promise<ILoginResponse | null> {
         try {
-            // Check if user with the provided email already exists
             const existingUserWithEmail = await AuthUser.findOne({
                 where: { email: userDetails.email },
             });
@@ -25,13 +33,9 @@ class AuthService {
             }
     
             // Generate OTP
-            const resetOtp = generate(6, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-
-    
-            // Set OTP expiration time (e.g., 10 minutes from now)
-            const otpExpiration = new Date();
-            otpExpiration.setMinutes(otpExpiration.getMinutes() + 10);
-    
+            const resetOtp = this.generateOtp();
+            const otpExpiration = this.setOtpExpiration(10);
+        
             // Save user details along with OTP and expiration time
             const newUser = await AuthUser.create({
                 ...userDetails,
@@ -63,9 +67,7 @@ class AuthService {
                 return { message: 'User not found', loading: false, token: '', user: null };
             }
     
-            // Check if OTP is expired
-            const now = new Date();
-            if (user.otpExpiration && user.otpExpiration < now) {
+            if (user.otpExpiration && new Date() > user.otpExpiration) {
                 return { message: 'OTP has expired', loading: false, token: '', user: null };
             }
     
@@ -75,14 +77,13 @@ class AuthService {
             await user.save();
     
             // Generate JWT token
-            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.id, email: user.email, role : user.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
             return { message: 'Email verified successfully', loading: false, token, user: user };
         } catch (error) {
             console.error('Error in verifying email:', error);
             return { message: 'Internal server error', loading: false, token: '', user: null };
         }
     }
-    
     async authenticateUser(loginCredentials: ILoginUser): Promise<ILoginResponse> {
         try {
             const { email, password } = loginCredentials;
@@ -102,7 +103,7 @@ class AuthService {
             }
 
             // If email and password are valid, generate JWT token
-            const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.id, email: user.email, role : user.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
 
             return { message: 'Login successful', loading: false, token, user: user.toJSON() as IAuthUser };
         } catch (error) {
@@ -120,11 +121,10 @@ class AuthService {
             }
 
             // Generate a 6-digit OTP
-            const resetOtp = generate(6, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+            const resetOtp = this.generateOtp();
 
             // Set OTP expiration time (e.g., 10 minutes from now)
-            const otpExpiration = new Date();
-            otpExpiration.setMinutes(otpExpiration.getMinutes() + 10);
+            const otpExpiration = this.setOtpExpiration(10);
 
             // Update user with the OTP and expiration
             user.otp = resetOtp;
@@ -140,29 +140,48 @@ class AuthService {
             return 'Internal server error';
         }
     }
-
-    async resetPassword(otp: string, password: string): Promise<string> {
+    async verifyOtpForPasswordReset(otp: string): Promise<string> {
         try {
             const user = await AuthUser.findOne({ where: { otp } });
             if (!user) {
-                throw new Error('Invalid OTP');
+                return 'Invalid OTP';
             }
-    
-            const now = new Date();
-            if (user.otpExpiration && user.otpExpiration < now) {
-                throw new Error('OTP has expired');
+
+            if (user.otpExpiration && new Date() > user.otpExpiration) {
+                return 'OTP has expired';
             }
-    
-            user.password = password;
-            await user.save();
-    
+            console.log("this is ", otp)
+            const otpVerifiedExpiration = this.setOtpExpiration(10); // Set OTP verified state expiration
             user.otp = "";
+            user.otpVerified = true;
+            user.otpExpiration = otpVerifiedExpiration;
             await user.save();
-    
-            return "Password reset successfully";
+
+            return 'OTP verified successfully';
         } catch (error) {
-            console.error('Error in reset password:', error);
-            throw error; // Rethrow the error for proper handling
+            console.error('Error in verifying OTP:', error);
+            return 'Internal server error';
+        }
+    }
+    async resetPassword(email: string, newPassword: string): Promise<string> {
+        try {
+            const user = await AuthUser.findOne({ where: { email } });
+            if (!user) {
+                return 'User not found';
+            }
+
+            if (!user.otpVerified) { 
+                return 'OTP verification required';
+            }
+
+            user.password = newPassword;
+            user.otpVerified = false; // Reset OTP verification flag
+            await user.save();
+
+            return 'Password reset successfully';
+        } catch (error) {
+            console.error('Error in resetting password:', error);
+            return 'Internal server error';
         }
     }
     

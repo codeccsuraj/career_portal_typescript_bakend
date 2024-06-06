@@ -19,6 +19,7 @@ class AuthUser extends Model<IAuthUser> {
     public browserType!: string;
     public otp!: string;
     public otpExpiration!: Date;
+    public otpVerified! : boolean;
     public emailResendOtp!: boolean;
     public mobileResendOtp!: boolean;
     public role!: Roles;
@@ -96,12 +97,17 @@ AuthUser.init({
         type: DataTypes.STRING, 
         allowNull: true,
     },
+    otpVerified: { 
+        type: DataTypes.BOOLEAN, 
+        allowNull: false, 
+        defaultValue: false, 
+    },
     otpExpiration: { 
         type: DataTypes.DATE, 
         allowNull: true,
     },
     emailResendOtp: { 
-        type: DataTypes.BOOLEAN, 
+        type: DataTypes.BOOLEAN,
         allowNull: false, 
         defaultValue: false,
     },

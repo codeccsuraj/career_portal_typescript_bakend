@@ -18,6 +18,7 @@ export interface IAuthUser {
     emailResendOtp : boolean;
     mobileResendOtp : boolean;
     otp? :string | null;
+    otpVerified? : boolean;
     otpExpiration? : Date | null;
     createdAt? : Date;
     updatedAt? : Date;
